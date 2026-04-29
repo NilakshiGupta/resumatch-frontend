@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate, Link } from 'react-router-dom'
 
+const API = 'https://resumatch-backend-production-c7cd.up.railway.app'
+
 export default function Analyze() {
     const [resumes, setResumes] = useState([])
     const [resumeId, setResumeId] = useState('')
@@ -13,7 +15,7 @@ export default function Analyze() {
 
     useEffect(() => {
         if (!token) { navigate('/login'); return }
-        axios.get('http://localhost:8080/api/resume/list', {
+        axios.get(`${API}/api/resume/list`, {
             headers: { Authorization: `Bearer ${token}` }
         }).then(res => setResumes(res.data))
     }, [])
@@ -23,7 +25,7 @@ export default function Analyze() {
         setLoading(true)
         try {
             const res = await axios.post(
-                `http://localhost:8080/api/analysis/analyze?resumeId=${resumeId}&jobDescription=${encodeURIComponent(jobDescription)}`,
+                `${API}/api/analysis/analyze?resumeId=${resumeId}&jobDescription=${encodeURIComponent(jobDescription)}`,
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             )

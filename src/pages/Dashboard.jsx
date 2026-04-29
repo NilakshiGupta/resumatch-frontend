@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate, Link } from 'react-router-dom'
 
+const API = 'https://resumatch-backend-production-c7cd.up.railway.app'
+
 export default function Dashboard() {
     const [data, setData] = useState(null)
     const navigate = useNavigate()
@@ -9,7 +11,7 @@ export default function Dashboard() {
 
     useEffect(() => {
         if (!token) { navigate('/login'); return }
-        axios.get('http://localhost:8080/api/dashboard/summary', {
+        axios.get(`${API}/api/dashboard/summary`, {
             headers: { Authorization: `Bearer ${token}` }
         }).then(res => setData(res.data))
             .catch(() => navigate('/login'))

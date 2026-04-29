@@ -2,6 +2,8 @@ import { useState } from 'react'
 import axios from 'axios'
 import { useNavigate, Link } from 'react-router-dom'
 
+const API = 'https://resumatch-backend-production-c7cd.up.railway.app'
+
 export default function Upload() {
     const [file, setFile] = useState(null)
     const [message, setMessage] = useState('')
@@ -15,7 +17,7 @@ export default function Upload() {
         const formData = new FormData()
         formData.append('file', file)
         try {
-            const res = await axios.post('http://localhost:8080/api/resume/upload', formData, {
+            const res = await axios.post(`${API}/api/resume/upload`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             setMessage(`Resume uploaded: ${res.data.fileName}`)

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import axios from 'axios'
 import { useNavigate, Link } from 'react-router-dom'
 
+const API = 'https://resumatch-backend-production-c7cd.up.railway.app'
+
 export default function Register() {
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
@@ -10,7 +12,7 @@ export default function Register() {
 
     const handleRegister = async () => {
         try {
-            const res = await axios.post('http://localhost:8080/api/auth/register', { name, email, password })
+            const res = await axios.post(`${API}/api/auth/register`, { name, email, password })
             localStorage.setItem('token', res.data.token)
             localStorage.setItem('name', res.data.name)
             navigate('/dashboard')
