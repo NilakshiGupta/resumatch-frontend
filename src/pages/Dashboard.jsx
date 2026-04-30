@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate, Link } from 'react-router-dom'
 
-const API = 'https://resumatch-backend-95z2.onrender.com'
+const API = import.meta.env.VITE_API_URL
 
 export default function Dashboard() {
     const [data, setData] = useState(null)
