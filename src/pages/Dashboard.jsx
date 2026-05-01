@@ -8,7 +8,6 @@ import {
 
 const API = import.meta.env.VITE_API_URL
 
-/* ── Score Ring ─────────────────────────────────────── */
 function ScoreRing({ value, color, size = 90, label }) {
     const r = 36; const circ = 2 * Math.PI * r
     const [animated, setAnimated] = useState(0)
@@ -39,7 +38,6 @@ function ScoreRing({ value, color, size = 90, label }) {
     )
 }
 
-/* ── Stat Card ──────────────────────────────────────── */
 function StatCard({ label, value, suffix = '', color, icon, delay = 0 }) {
     const [count, setCount] = useState(0)
     useEffect(() => {
@@ -68,7 +66,6 @@ function StatCard({ label, value, suffix = '', color, icon, delay = 0 }) {
     )
 }
 
-/* ── Custom Tooltip ─────────────────────────────────── */
 const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
@@ -84,8 +81,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Dashboard() {
-    const [data, setData]       = useState(null)
-    const [active, setActive]   = useState('overview')
+    const [data, setData] = useState(null)
     const navigate = useNavigate()
     const token = localStorage.getItem('token')
 
@@ -115,9 +111,7 @@ export default function Dashboard() {
     const navItems = [
         { to:'/upload',       icon:'⬆', label:'Upload' },
         { to:'/analyze',      icon:'◎', label:'Analyze' },
-        { to:'/history',      icon:'◷', label:'History' },
-        { to:'/resumes',      icon:'◻', label:'Resumes' },
-        { to:'/cover-letter', icon:'✉', label:'Cover Letter' },
+        { to:'/tailor',       icon:'✦', label:'Tailor Resume' },
     ]
 
     return (
@@ -125,7 +119,6 @@ export default function Dashboard() {
             <div className="bg-grid" />
             <div className="orb orb-1" /><div className="orb orb-2" /><div className="orb orb-3" />
 
-            {/* ── TOP NAV ─────────────────────────────────── */}
             <nav style={{
                 position:'sticky', top:0, zIndex:100,
                 background:'rgba(4,4,10,0.8)', backdropFilter:'blur(20px)',
@@ -150,43 +143,36 @@ export default function Dashboard() {
 
             <div style={{ maxWidth:'1100px', margin:'0 auto', padding:'40px 40px 0' }}>
 
-                {/* ── GREETING ─────────────────────────────── */}
                 <div className="page-enter" style={{ marginBottom:'40px' }}>
-                    <p style={{ fontFamily:'var(--font-mono)', fontSize:'12px', color:'var(--text-3)', marginBottom:'6px' }}>
-                        // WELCOME BACK
-                    </p>
+                    <p style={{ fontFamily:'var(--font-mono)', fontSize:'12px', color:'var(--text-3)', marginBottom:'6px' }}>// WELCOME BACK</p>
                     <h1 style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:'38px', letterSpacing:'-0.02em', lineHeight:1.1 }}>
                         Hey, <span style={{ background:'linear-gradient(135deg, var(--purple), var(--cyan))', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>{data.name}</span> 👋
                     </h1>
                     <p style={{ color:'var(--text-3)', marginTop:'8px' }}>Here's your career progress at a glance.</p>
                 </div>
 
-                {/* ── STAT CARDS ───────────────────────────── */}
                 <div className="stagger" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'16px', marginBottom:'32px' }}>
-                    <StatCard label="Resumes"   value={data.totalResumes}          icon="📄" color="var(--purple)" delay={0.05} />
-                    <StatCard label="Analyses"  value={data.totalAnalyses}         icon="◎"  color="var(--cyan)"   delay={0.1} />
-                    <StatCard label="Avg ATS"   value={data.averageAtsScore}       icon="✓"  color="var(--green)"  suffix="%" delay={0.15} />
+                    <StatCard label="Resumes"   value={data.totalResumes}           icon="📄" color="var(--purple)" delay={0.05} />
+                    <StatCard label="Analyses"  value={data.totalAnalyses}          icon="◎"  color="var(--cyan)"   delay={0.1} />
+                    <StatCard label="Avg ATS"   value={data.averageAtsScore}        icon="✓"  color="var(--green)"  suffix="%" delay={0.15} />
                     <StatCard label="Avg Match" value={data.averageMatchPercentage} icon="⚡" color="var(--yellow)" suffix="%" delay={0.2} />
                 </div>
 
-                {/* ── CHARTS ───────────────────────────────── */}
                 {chartData.length > 0 && (
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px', marginBottom:'32px' }}>
                         <div className="glass page-enter" style={{ padding:'28px', animationDelay:'0.25s' }}>
                             <div className="section-label">Score Trend</div>
-                            <h3 style={{ fontFamily:'var(--font-display)', fontWeight:700, marginBottom:'20px', fontSize:'16px' }}>
-                                Match & ATS Over Time
-                            </h3>
+                            <h3 style={{ fontFamily:'var(--font-display)', fontWeight:700, marginBottom:'20px', fontSize:'16px' }}>Match & ATS Over Time</h3>
                             <ResponsiveContainer width="100%" height={200}>
                                 <AreaChart data={chartData}>
                                     <defs>
                                         <linearGradient id="gMatch" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%"  stopColor="#8b5cf6" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}   />
+                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="gATS" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%"  stopColor="#22d3ee" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}   />
+                                            <stop offset="95%" stopColor="#22d3ee" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -201,9 +187,7 @@ export default function Dashboard() {
 
                         <div className="glass page-enter" style={{ padding:'28px', animationDelay:'0.3s' }}>
                             <div className="section-label">Comparison</div>
-                            <h3 style={{ fontFamily:'var(--font-display)', fontWeight:700, marginBottom:'20px', fontSize:'16px' }}>
-                                Score Breakdown
-                            </h3>
+                            <h3 style={{ fontFamily:'var(--font-display)', fontWeight:700, marginBottom:'20px', fontSize:'16px' }}>Score Breakdown</h3>
                             <ResponsiveContainer width="100%" height={200}>
                                 <BarChart data={chartData} barGap={4}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -218,7 +202,6 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* ── RECENT ANALYSES ──────────────────────── */}
                 {data.recentAnalyses?.length > 0 && (
                     <div className="glass page-enter" style={{ padding:'28px', animationDelay:'0.35s' }}>
                         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px' }}>
@@ -226,7 +209,6 @@ export default function Dashboard() {
                                 <div className="section-label">Activity</div>
                                 <h3 style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:'16px' }}>Recent Analyses</h3>
                             </div>
-                            <Link to="/history" className="btn-ghost" style={{ fontSize:'12px', padding:'7px 14px' }}>View All →</Link>
                         </div>
                         <div style={{ display:'flex', flexDirection:'column', gap:'2px' }}>
                             {data.recentAnalyses.map((a, i) => (
@@ -234,7 +216,6 @@ export default function Dashboard() {
                                     display:'flex', alignItems:'center', justifyContent:'space-between',
                                     padding:'14px 16px', borderRadius:'12px',
                                     background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
-                                    transition:'background 0.2s',
                                 }}>
                                     <div style={{ display:'flex', alignItems:'center', gap:'14px' }}>
                                         <div style={{ width:'36px', height:'36px', borderRadius:'10px', background:'var(--purple-glow)', border:'1px solid rgba(139,92,246,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px' }}>◎</div>
@@ -253,17 +234,16 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* ── QUICK ACTIONS ────────────────────────── */}
                 <div className="stagger" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'14px', marginTop:'24px' }}>
                     {[
-                        { to:'/upload',       icon:'⬆', title:'Upload Resume',    desc:'Add a new resume or version',   color:'#8b5cf6' },
-                        { to:'/analyze',      icon:'◎', title:'Run Analysis',     desc:'Match against a job description', color:'#22d3ee' },
-                        { to:'/cover-letter', icon:'✉', title:'Cover Letter',     desc:'AI-generated, personalized',     color:'#4ade80' },
+                        { to:'/upload',  icon:'⬆', title:'Upload Resume',   desc:'Add a new resume or version',    color:'#8b5cf6' },
+                        { to:'/analyze', icon:'◎', title:'Run Analysis',    desc:'Match against a job description', color:'#22d3ee' },
+                        { to:'/tailor',  icon:'✦', title:'Tailor Resume',   desc:'AI-generated ATS optimized',     color:'#4ade80' },
                     ].map(item => (
                         <Link key={item.to} to={item.to} style={{ textDecoration:'none' }}>
                             <div className="glass" style={{ padding:'22px', cursor:'pointer', transition:'all 0.3s var(--ease-out)' }}
-                                 onMouseEnter={e => { e.currentTarget.style.borderColor = `${item.color}44`; e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 20px 60px rgba(0,0,0,0.3)` }}
-                                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
+                                 onMouseEnter={e => { e.currentTarget.style.borderColor = `${item.color}44`; e.currentTarget.style.transform = 'translateY(-4px)' }}
+                                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none' }}
                             >
                                 <div style={{ width:'40px', height:'40px', borderRadius:'12px', background:`${item.color}18`, border:`1px solid ${item.color}30`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'18px', marginBottom:'14px' }}>
                                     {item.icon}
