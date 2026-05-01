@@ -6,6 +6,8 @@ import Upload from './pages/Upload'
 import Analyze from './pages/Analyze'
 import AnalysisHistory from './pages/AnalysisHistory'
 import ResumeManagement from './pages/ResumeManagement'
+import CoverLetter from './pages/CoverLetter'
+
 
 
 function App() {
@@ -22,6 +24,7 @@ function App() {
           <Route path="/analyze" element={<Analyze />} />
             <Route path="/history" element={<AnalysisHistory />} />
             <Route path="/resumes" element={<ResumeManagement />} />
+            <Route path="/cover-letter" element={<CoverLetter />} />
         </Routes>
       </BrowserRouter>
   )
