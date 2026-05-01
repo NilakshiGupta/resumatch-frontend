@@ -70,6 +70,7 @@ export default function Dashboard() {
                     <Link to="/analyze" className="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-lg font-semibold">Analyze Resume</Link>
                     <Link to="/history" className="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-lg font-semibold">View History</Link>
                     <Link to="/resumes" className="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-lg font-semibold">My Resumes</Link>
+                    <Link to="/cover-letter" className="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-lg font-semibold">Cover Letter</Link>
                 </div>
 
                 {/* Charts */}
