@@ -1,4 +1,4 @@
-import Sidebar from './Sidebar';
+import SidebarTemp from './SidebarTemp.jsx';
 import { useLocation } from 'react-router-dom';
 
 export default function Layout({ children }) {
@@ -9,10 +9,10 @@ export default function Layout({ children }) {
 
     return (
         <div style={{ display: 'flex' }}>
-            <Sidebar />
+            <SidebarTemp />
             <main style={{
                 flex: 1,
-                marginLeft: '260px', // Sidebar ki width
+                marginLeft: '260px', // SidebarTemp ki width
                 minHeight: '100vh',
                 position: 'relative'
             }}>

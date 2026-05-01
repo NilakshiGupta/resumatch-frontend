@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-export default function Sidebar() {
+export default function SidebarTemp() {
     const location = useLocation();
     const navigate = useNavigate();
     const name = localStorage.getItem('name') || 'User';
