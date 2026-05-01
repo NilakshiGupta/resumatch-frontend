@@ -4,6 +4,9 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Upload from './pages/Upload'
 import Analyze from './pages/Analyze'
+import AnalysisHistory from './pages/AnalysisHistory'
+import ResumeManagement from './pages/ResumeManagement'
+
 
 function App() {
   const token = localStorage.getItem('token')
@@ -17,6 +20,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/analyze" element={<Analyze />} />
+            <Route path="/history" element={<AnalysisHistory />} />
+            <Route path="/resumes" element={<ResumeManagement />} />
         </Routes>
       </BrowserRouter>
   )
