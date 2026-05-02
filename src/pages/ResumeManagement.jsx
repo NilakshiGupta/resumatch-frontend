@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate, Link } from 'react-router-dom'
+import { useToast } from '../components/Toast.jsx'
 
 const API = import.meta.env.VITE_API_URL
 
 export default function ResumeManagement() {
-    const [resumes, setResumes] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [deleting, setDeleting] = useState(null)
-    const [toggling, setToggling] = useState(null)
+    const [resumes, setResumes]       = useState([])
+    const [loading, setLoading]       = useState(true)
+    const [deleting, setDeleting]     = useState(null)
+    const [toggling, setToggling]     = useState(null)
+    const [confirmId, setConfirmId]   = useState(null) // inline confirm state
     const navigate = useNavigate()
-    const token = localStorage.getItem('token')
+    const token    = localStorage.getItem('token')
+    const toast    = useToast()
 
     useEffect(() => {
         if (!token) { navigate('/login'); return }
@@ -21,16 +24,19 @@ export default function ResumeManagement() {
         setLoading(true)
         axios.get(`${API}/api/resume/list`, { headers: { Authorization: `Bearer ${token}` } })
             .then(res => setResumes(res.data))
+            .catch(() => toast.error('Failed to load resumes.'))
             .finally(() => setLoading(false))
     }
 
     const handleDelete = async (id) => {
-        if (!confirm('Delete this resume? This cannot be undone.')) return
-        setDeleting(id)
+        setDeleting(id); setConfirmId(null)
         try {
             await axios.delete(`${API}/api/resume/${id}`, { headers: { Authorization: `Bearer ${token}` } })
             setResumes(prev => prev.filter(r => r.id !== id))
-        } catch { alert('Delete failed') }
+            toast.success('Resume deleted.')
+        } catch {
+            toast.error('Delete failed. Please try again.')
+        }
         setDeleting(null)
     }
 
@@ -39,7 +45,10 @@ export default function ResumeManagement() {
         try {
             await axios.put(`${API}/api/resume/${id}/toggle`, {}, { headers: { Authorization: `Bearer ${token}` } })
             fetchResumes()
-        } catch { alert('Toggle failed') }
+            toast.info('Resume status updated.')
+        } catch {
+            toast.error('Toggle failed. Please try again.')
+        }
         setToggling(null)
     }
 
@@ -109,52 +118,75 @@ export default function ResumeManagement() {
                                         background: resume.isActive ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.04)',
                                         border:`1px solid ${resume.isActive ? 'rgba(74,222,128,0.2)' : 'var(--border)'}`,
                                         display:'flex', alignItems:'center', justifyContent:'center', fontSize:'20px',
-                                    }}>
-                                        📄
-                                    </div>
+                                    }}>📄</div>
                                     <div style={{ minWidth:0 }}>
                                         <p style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:'15px', marginBottom:'3px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                                             {resume.fileName}
                                         </p>
                                         <div style={{ display:'flex', gap:'8px', alignItems:'center', flexWrap:'wrap' }}>
                                             <span className="tag tag-purple" style={{ fontSize:'10px', padding:'2px 8px' }}>v{resume.versionNumber}</span>
+                                            <span style={{ fontSize:'11px', color:'var(--text-3)', fontFamily:'var(--font-mono)' }}>{resume.versionLabel}</span>
                                             <span style={{ fontSize:'11px', color:'var(--text-3)', fontFamily:'var(--font-mono)' }}>
-                        {resume.versionLabel}
-                      </span>
-                                            <span style={{ fontSize:'11px', color:'var(--text-3)', fontFamily:'var(--font-mono)' }}>
-                        {new Date(resume.uploadedAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}
-                      </span>
+                                                {new Date(resume.uploadedAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* status + actions */}
                                 <div style={{ display:'flex', alignItems:'center', gap:'10px', flexShrink:0 }}>
-                                    <div style={{ display:'flex', alignItems:'center', gap:'6px', padding:'5px 12px', borderRadius:'99px', background: resume.isActive ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.04)', border:`1px solid ${resume.isActive ? 'rgba(74,222,128,0.2)' : 'var(--border)'}` }}>
+                                    <div style={{ display:'flex', alignItems:'center', gap:'6px', padding:'5px 12px', borderRadius:'99px',
+                                        background: resume.isActive ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.04)',
+                                        border:`1px solid ${resume.isActive ? 'rgba(74,222,128,0.2)' : 'var(--border)'}` }}>
                                         {resume.isActive && <div className="pulse-dot" />}
                                         <span style={{ fontSize:'11px', fontFamily:'var(--font-mono)', color: resume.isActive ? 'var(--green)' : 'var(--text-3)' }}>
-                      {resume.isActive ? 'Active' : 'Inactive'}
-                    </span>
+                                            {resume.isActive ? 'Active' : 'Inactive'}
+                                        </span>
                                     </div>
 
                                     <button
                                         onClick={() => handleToggle(resume.id)}
                                         disabled={toggling === resume.id}
                                         className="btn-ghost"
-                                        style={{ fontSize:'12px', padding:'7px 14px', color: resume.isActive ? 'var(--text-3)' : 'var(--green)', borderColor: resume.isActive ? 'var(--border)' : 'rgba(74,222,128,0.2)' }}
+                                        style={{ fontSize:'12px', padding:'7px 14px',
+                                            color: resume.isActive ? 'var(--text-3)' : 'var(--green)',
+                                            borderColor: resume.isActive ? 'var(--border)' : 'rgba(74,222,128,0.2)' }}
                                     >
                                         {toggling === resume.id ? '...' : resume.isActive ? 'Deactivate' : 'Activate'}
                                     </button>
 
-                                    <button
-                                        onClick={() => handleDelete(resume.id)}
-                                        disabled={deleting === resume.id}
-                                        style={{ padding:'7px 14px', borderRadius:'10px', fontSize:'12px', fontFamily:'var(--font-body)', cursor:'pointer', background:'rgba(248,113,113,0.08)', border:'1px solid rgba(248,113,113,0.2)', color:'var(--red)', transition:'all 0.2s' }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.15)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
-                                    >
-                                        {deleting === resume.id ? '...' : '✕ Delete'}
-                                    </button>
+                                    {/* Inline confirm delete */}
+                                    {confirmId === resume.id ? (
+                                        <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
+                                            <span style={{ fontSize:'11px', color:'var(--red)', fontFamily:'var(--font-mono)' }}>Sure?</span>
+                                            <button
+                                                onClick={() => handleDelete(resume.id)}
+                                                disabled={deleting === resume.id}
+                                                style={{ padding:'5px 12px', borderRadius:'8px', fontSize:'12px', cursor:'pointer',
+                                                    background:'rgba(248,113,113,0.2)', border:'1px solid rgba(248,113,113,0.4)', color:'var(--red)' }}
+                                            >
+                                                {deleting === resume.id ? '...' : 'Yes, delete'}
+                                            </button>
+                                            <button
+                                                onClick={() => setConfirmId(null)}
+                                                style={{ padding:'5px 12px', borderRadius:'8px', fontSize:'12px', cursor:'pointer',
+                                                    background:'var(--surface)', border:'1px solid var(--border)', color:'var(--text-3)' }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setConfirmId(resume.id)}
+                                            style={{ padding:'7px 14px', borderRadius:'10px', fontSize:'12px', fontFamily:'var(--font-body)',
+                                                cursor:'pointer', background:'rgba(248,113,113,0.08)', border:'1px solid rgba(248,113,113,0.2)',
+                                                color:'var(--red)', transition:'all 0.2s' }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.15)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
+                                        >
+                                            ✕ Delete
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>

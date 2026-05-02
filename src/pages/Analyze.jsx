@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import jsPDF from 'jspdf'
 
 const API = import.meta.env.VITE_API_URL
@@ -54,22 +54,41 @@ function Section({ label, children }) {
     )
 }
 
-export default function Analyze() {
-    const [resumes, setResumes]         = useState([])
-    const [resumeId, setResumeId]       = useState('')
-    const [jobDescription, setJobDesc]  = useState('')
-    const [result, setResult]           = useState(null)
-    const [loading, setLoading]         = useState(false)
-    const [stage, setStage]             = useState(0)
-    const navigate = useNavigate()
-    const token    = localStorage.getItem('token')
+/* ── Inline Error Banner ────────────────────────────── */
+function ErrorBanner({ message, onClose }) {
+    if (!message) return null
+    return (
+        <div style={{
+            background:'rgba(248,113,113,0.08)', border:'1px solid rgba(248,113,113,0.25)',
+            borderRadius:'12px', padding:'14px 18px', marginBottom:'20px',
+            color:'var(--red)', fontSize:'13px', display:'flex',
+            justifyContent:'space-between', alignItems:'center',
+            animation:'page-in 0.3s var(--ease-out)',
+        }}>
+            <span>⚠ {message}</span>
+            <button onClick={onClose} style={{ background:'none', border:'none', color:'var(--red)', cursor:'pointer', fontSize:'16px', lineHeight:1 }}>✕</button>
+        </div>
+    )
+}
 
+export default function Analyze() {
+    const [resumes, setResumes]        = useState([])
+    const [resumeId, setResumeId]      = useState('')
+    const [jobDescription, setJobDesc] = useState('')
+    const [result, setResult]          = useState(null)
+    const [loading, setLoading]        = useState(false)
+    const [stage, setStage]            = useState(0)
+    const [error, setError]            = useState('')
+
+    const token  = localStorage.getItem('token')
     const stages = ['Parsing resume...', 'Analyzing keywords...', 'Computing ATS score...', 'Generating insights...']
+    const jdRef  = useRef(null)   // ← ref for auto-focus
 
     useEffect(() => {
-        if (!token) { navigate('/login'); return }
+        if (!token) return
         axios.get(`${API}/api/resume/list`, { headers: { Authorization: `Bearer ${token}` } })
             .then(res => setResumes(res.data))
+            .catch(() => setError('Failed to load resumes. Please refresh.'))
     }, [])
 
     useEffect(() => {
@@ -78,37 +97,53 @@ export default function Analyze() {
         return () => clearInterval(t)
     }, [loading])
 
+    // Auto-focus JD textarea when a resume is selected
+    const handleResumeChange = (e) => {
+        setResumeId(e.target.value)
+        if (e.target.value && jdRef.current) {
+            setTimeout(() => jdRef.current?.focus(), 50)
+        }
+    }
+
     const handleAnalyze = async () => {
-        if (!resumeId || !jobDescription) { alert('Select a resume and enter job description'); return }
-        setLoading(true); setResult(null)
+        if (!resumeId)       { setError('Please select a resume'); return }
+        if (!jobDescription.trim()) { setError('Please paste the job description'); return }
+        if (jobDescription.trim().length < 50) { setError('Job description seems too short. Please paste the full JD.'); return }
+
+        setLoading(true); setResult(null); setError('')
         try {
             const res = await axios.post(
-                `${API}/api/analysis/analyze?resumeId=${resumeId}&jobDescription=${encodeURIComponent(jobDescription)}`,
-                {}, { headers: { Authorization: `Bearer ${token}` } }
+                `${API}/api/analysis/analyze`,
+                { resumeId, jobDescription },
+                { headers: { Authorization: `Bearer ${token}` } }
             )
             setResult(res.data)
-        } catch { alert('Analysis failed') }
+        } catch (err) {
+            const msg = err?.response?.data?.message || err?.response?.data || 'Analysis failed. Please try again.'
+            setError(typeof msg === 'string' ? msg : 'Analysis failed. Please try again.')
+        }
         setLoading(false)
     }
 
     const downloadPDF = () => {
+        if (!result) return
         const doc = new jsPDF(); const W = doc.internal.pageSize.getWidth(); let y = 20
         doc.setFontSize(22); doc.setTextColor(139, 92, 246)
         doc.text('ResuMatch Analysis Report', W/2, y, { align:'center' }); y += 10
         doc.setDrawColor(139, 92, 246); doc.line(20, y, W-20, y); y += 10
         doc.setFontSize(13); doc.setTextColor(50,50,50)
-        doc.text(`Job: ${result.jobTitle}`, 20, y); y += 8
-        doc.text(`Industry: ${result.industry}`, 20, y); y += 12
+        doc.text(`Job: ${result.jobTitle || 'N/A'}`, 20, y); y += 8
+        doc.text(`Industry: ${result.industry || 'N/A'}`, 20, y); y += 12
         doc.setFontSize(14); doc.setTextColor(139,92,246)
         doc.text(`Match: ${result.matchPercentage}%`, 20, y); y += 8
         doc.setTextColor(34,197,94); doc.text(`ATS: ${result.atsScore}%`, 20, y); y += 12
         const secs = [
-            { label:'Matched Keywords', val:result.matchedKeywords, color:[34,197,94]   },
-            { label:'Missing Keywords', val:result.missingKeywords, color:[239,68,68]   },
-            { label:'Suggestions',      val:result.suggestions,     color:[50,50,50]    },
-            { label:'Improvement Tips', val:result.improvementTips, color:[50,50,50]    },
-            { label:'Skills Gap',       val:result.skillsGap,       color:[234,179,8]   },
-            { label:'Experience Gap',   val:result.experienceGap,   color:[234,179,8]   },
+            { label:'Matched Keywords', val:result.matchedKeywords, color:[34,197,94]  },
+            { label:'Missing Keywords', val:result.missingKeywords, color:[239,68,68]  },
+            { label:'Suggestions',      val:result.suggestions,     color:[50,50,50]   },
+            { label:'Improvement Tips', val:result.improvementTips, color:[50,50,50]   },
+            { label:'Skills Gap',       val:result.skillsGap,       color:[234,179,8]  },
+            { label:'Experience Gap',   val:result.experienceGap,   color:[234,179,8]  },
         ]
         secs.forEach(s => {
             doc.setFontSize(11); doc.setTextColor(100,100,100); doc.text(`${s.label}:`, 20, y); y += 7
@@ -119,7 +154,7 @@ export default function Analyze() {
         })
         doc.setFontSize(9); doc.setTextColor(150,150,150)
         doc.text(`Generated by ResuMatch • ${new Date().toLocaleDateString()}`, W/2, 290, { align:'center' })
-        doc.save(`ResuMatch_${result.jobTitle}.pdf`)
+        doc.save(`ResuMatch_${result.jobTitle || 'Report'}.pdf`)
     }
 
     return (
@@ -135,19 +170,43 @@ export default function Analyze() {
                     <Link to="/dashboard" className="btn-ghost">← Dashboard</Link>
                 </div>
 
+                <ErrorBanner message={error} onClose={() => setError('')} />
+
                 {/* ── INPUT CARD ─── */}
                 <div className="glass page-enter" style={{ padding:'32px', marginBottom:'24px', animationDelay:'0.1s' }}>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:'20px' }}>
                         <div>
                             <div className="section-label">Select Resume</div>
-                            <select value={resumeId} onChange={e => setResumeId(e.target.value)} className="input-field" style={{ cursor:'pointer' }}>
-                                <option value="">— Choose a resume —</option>
-                                {resumes.map(r => <option key={r.id} value={r.id}>{r.fileName} (v{r.versionNumber})</option>)}
-                            </select>
+                            {resumes.length === 0 ? (
+                                <div style={{ padding:'14px 18px', borderRadius:'12px', border:'1px solid var(--border)', color:'var(--text-3)', fontSize:'13px' }}>
+                                    No resumes found. <Link to="/upload" style={{ color:'var(--purple)' }}>Upload one →</Link>
+                                </div>
+                            ) : (
+                                <select
+                                    value={resumeId}
+                                    onChange={handleResumeChange}
+                                    className="input-field"
+                                    style={{ cursor:'pointer' }}
+                                >
+                                    <option value="">— Choose a resume —</option>
+                                    {resumes.map(r => <option key={r.id} value={r.id}>{r.fileName} (v{r.versionNumber})</option>)}
+                                </select>
+                            )}
                         </div>
                         <div>
-                            <div className="section-label">Job Description</div>
+                            <div className="section-label">
+                                Job Description
+                                <span style={{ color:'var(--text-3)', fontWeight:400, marginLeft:'8px' }}>
+                                    ({jobDescription.trim().split(/\s+/).filter(Boolean).length} words)
+                                </span>
+                                {resumeId && !jobDescription && (
+                                    <span style={{ marginLeft:'8px', color:'var(--purple)', fontSize:'10px', fontWeight:500 }}>
+                                        ← paste JD here
+                                    </span>
+                                )}
+                            </div>
                             <textarea
+                                ref={jdRef}
                                 value={jobDescription}
                                 onChange={e => setJobDesc(e.target.value)}
                                 rows={6}
@@ -157,7 +216,12 @@ export default function Analyze() {
                             />
                         </div>
                     </div>
-                    <button className="btn-primary" onClick={handleAnalyze} disabled={loading} style={{ marginTop:'20px', width:'100%', justifyContent:'center', padding:'15px', fontSize:'15px' }}>
+                    <button
+                        className="btn-primary"
+                        onClick={handleAnalyze}
+                        disabled={loading || resumes.length === 0}
+                        style={{ marginTop:'20px', width:'100%', justifyContent:'center', padding:'15px', fontSize:'15px' }}
+                    >
                         {loading ? (
                             <><span className="spinner" style={{ width:'18px', height:'18px', borderWidth:'2px' }} /> {stages[stage]}</>
                         ) : (
@@ -181,7 +245,6 @@ export default function Analyze() {
                             </div>
                         </div>
 
-                        {/* progress bars */}
                         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'28px' }}>
                             {[
                                 { label:'Match Score', value:result.matchPercentage, color:'var(--purple)' },
@@ -215,9 +278,14 @@ export default function Analyze() {
                         </Section>
 
                         <div className="divider" />
-                        <button onClick={downloadPDF} className="btn-primary" style={{ gap:'8px' }}>
-                            <span>↓</span> Download PDF Report
-                        </button>
+                        <div style={{ display:'flex', gap:'12px', alignItems:'center', flexWrap:'wrap' }}>
+                            <button onClick={downloadPDF} className="btn-primary" style={{ gap:'8px' }}>
+                                <span>↓</span> Download PDF Report
+                            </button>
+                            <Link to="/tailor" className="btn-ghost" style={{ gap:'8px' }}>
+                                <span>✦</span> Tailor This Resume
+                            </Link>
+                        </div>
                     </div>
                 )}
             </div>

@@ -1,4 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+    LayoutDashboard, FolderOpen, Upload, ScanSearch,
+    Wand2, Mail, ScrollText, LogOut
+} from 'lucide-react';
 
 export default function SidebarTemp() {
     const location = useLocation();
@@ -6,13 +10,13 @@ export default function SidebarTemp() {
     const name = localStorage.getItem('name') || 'User';
 
     const menuItems = [
-        { path: '/dashboard', icon: '📊', label: 'Dashboard' },
-        { path: '/resumes', icon: '📂', label: 'My Resumes' },
-        { path: '/upload', icon: '⬆️', label: 'Upload New' },
-        { path: '/analyze', icon: '◎', label: 'Analyze Match' },
-        { path: '/tailor', icon: '✦', label: 'Tailor Resume' },
-        { path: '/cover-letter', icon: '✉', label: 'Cover Letter' },
-        { path: '/history', icon: '📜', label: 'History' },
+        { path: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard'     },
+        { path: '/resumes',      icon: FolderOpen,      label: 'My Resumes'    },
+        { path: '/upload',       icon: Upload,          label: 'Upload New'    },
+        { path: '/analyze',      icon: ScanSearch,      label: 'Analyze Match' },
+        { path: '/tailor',       icon: Wand2,           label: 'Tailor Resume' },
+        { path: '/cover-letter', icon: Mail,            label: 'Cover Letter'  },
+        { path: '/history',      icon: ScrollText,      label: 'History'       },
     ];
 
     const logout = () => {
@@ -21,54 +25,149 @@ export default function SidebarTemp() {
     };
 
     return (
-        <div style={{
-            width: '260px', height: '100vh', background: 'var(--bg-2)',
-            borderRight: '1px solid var(--border)', display: 'flex',
-            flexDirection: 'column', position: 'fixed', left: 0, top: 0, zIndex: 100
-        }}>
-            {/* Logo Section */}
-            <div style={{ padding: '30px 24px' }}>
-                <div className="logo-text" style={{ fontSize: '24px' }}>ResuMatch</div>
-                <div style={{ fontSize: '10px', color: 'var(--text-3)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
-                    v2.0 // AI POWERED
+        <>
+            {/* Overlay for mobile */}
+            <div
+                className="sidebar-overlay"
+                onClick={() => document.body.classList.remove('sidebar-open')}
+            />
+
+            <div className="sidebar">
+                {/* Logo area */}
+                <div style={{
+                    height: '64px',
+                    borderBottom: '1px solid var(--border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0 20px',
+                }}>
+                    <span className="logo-text" style={{ fontSize: '20px' }}>ResuMatch</span>
                 </div>
-            </div>
 
-            {/* Menu Items */}
-            <div style={{ flex: 1, padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {menuItems.map((item) => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                        <Link key={item.path} to={item.path} className="nav-link" style={{
-                            background: isActive ? 'var(--purple-glow)' : 'transparent',
-                            color: isActive ? 'var(--text)' : 'var(--text-2)',
-                            border: isActive ? '1px solid var(--purple-glow)' : '1px solid transparent',
-                            display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
-                            textDecoration: 'none', borderRadius: '12px', transition: 'all 0.2s'
+                {/* Menu Items */}
+                <div style={{ flex: 1, padding: '16px 12px 0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    {menuItems.map(({ path, icon: Icon, label }) => {
+                        const isActive = location.pathname === path;
+                        return (
+                            <Link
+                                key={path}
+                                to={path}
+                                onClick={() => document.body.classList.remove('sidebar-open')}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '10px 14px',
+                                    borderRadius: '10px',
+                                    textDecoration: 'none',
+                                    transition: 'all 0.2s var(--ease-out)',
+                                    position: 'relative',
+                                    background: isActive
+                                        ? 'linear-gradient(135deg, rgba(139,92,246,0.18), rgba(139,92,246,0.08))'
+                                        : 'transparent',
+                                    border: isActive
+                                        ? '1px solid rgba(139,92,246,0.3)'
+                                        : '1px solid transparent',
+                                    color: isActive ? 'var(--text)' : 'var(--text-2)',
+                                }}
+                                onMouseEnter={e => {
+                                    if (!isActive) {
+                                        e.currentTarget.style.background = 'var(--surface-hover)';
+                                        e.currentTarget.style.color = 'var(--text)';
+                                    }
+                                }}
+                                onMouseLeave={e => {
+                                    if (!isActive) {
+                                        e.currentTarget.style.background = 'transparent';
+                                        e.currentTarget.style.color = 'var(--text-2)';
+                                    }
+                                }}
+                            >
+                                {/* Active indicator bar */}
+                                {isActive && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        left: 0,
+                                        top: '20%',
+                                        bottom: '20%',
+                                        width: '3px',
+                                        borderRadius: '0 3px 3px 0',
+                                        background: 'var(--purple)',
+                                        boxShadow: '0 0 8px var(--purple)',
+                                    }} />
+                                )}
+                                <Icon
+                                    size={17}
+                                    strokeWidth={isActive ? 2.2 : 1.8}
+                                    color={isActive ? 'var(--purple)' : 'currentColor'}
+                                />
+                                <span style={{
+                                    fontSize: '13.5px',
+                                    fontFamily: 'var(--font-body)',
+                                    fontWeight: isActive ? 600 : 400,
+                                    letterSpacing: 0,
+                                    textTransform: 'none',
+                                }}>
+                                    {label}
+                                </span>
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {/* User Profile */}
+                <div style={{
+                    padding: '16px',
+                    borderTop: '1px solid var(--border)',
+                    background: 'rgba(0,0,0,0.2)',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                        <div style={{
+                            width: '34px', height: '34px', borderRadius: '50%', flexShrink: 0,
+                            background: 'linear-gradient(135deg, var(--purple), var(--cyan))',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '13px', fontWeight: 700, color: '#fff',
                         }}>
-                            <span style={{ fontSize: '18px' }}>{item.icon}</span>
-                            <span style={{ fontSize: '14px', textTransform: 'none', letterSpacing: '0' }}>{item.label}</span>
-                        </Link>
-                    );
-                })}
-            </div>
-
-            {/* User Profile Section */}
-            <div style={{ padding: '20px', borderTop: '1px solid var(--border)', background: 'rgba(0,0,0,0.2)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--purple), var(--cyan))' }} />
-                    <div style={{ overflow: 'hidden' }}>
-                        <p style={{ fontSize: '13px', fontWeight: 600, margin: 0, whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{name}</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <div className="pulse-dot" style={{ width: '6px', height: '6px' }} />
-                            <span style={{ fontSize: '10px', color: 'var(--green)' }}>Online</span>
+                            {name.charAt(0).toUpperCase()}
+                        </div>
+                        <div style={{ overflow: 'hidden', flex: 1 }}>
+                            <p style={{
+                                fontSize: '13px', fontWeight: 600, margin: 0,
+                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                            }}>
+                                {name}
+                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <div className="pulse-dot" style={{ width: '6px', height: '6px' }} />
+                                <span style={{ fontSize: '10px', color: 'var(--green)', fontFamily: 'var(--font-mono)' }}>Online</span>
+                            </div>
                         </div>
                     </div>
+                    <button
+                        onClick={logout}
+                        style={{
+                            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            gap: '7px', padding: '8px 12px', borderRadius: '8px',
+                            background: 'transparent', border: '1px solid var(--border)',
+                            color: 'var(--text-3)', fontSize: '12px', cursor: 'pointer',
+                            fontFamily: 'var(--font-body)', transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.background = 'rgba(248,113,113,0.08)';
+                            e.currentTarget.style.borderColor = 'rgba(248,113,113,0.3)';
+                            e.currentTarget.style.color = 'var(--red)';
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = 'var(--border)';
+                            e.currentTarget.style.color = 'var(--text-3)';
+                        }}
+                    >
+                        <LogOut size={13} />
+                        Logout
+                    </button>
                 </div>
-                <button onClick={logout} className="btn-ghost" style={{ width: '100%', fontSize: '12px', padding: '8px' }}>
-                    Logout ↪
-                </button>
             </div>
-        </div>
+        </>
     );
 }

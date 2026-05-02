@@ -1,7 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 
-// Sahi paths (Kyunki tumhari files pages folder mein hain)
 import Layout           from './pages/Layout'
 import Login            from './pages/Login'
 import Register         from './pages/Register'
@@ -13,30 +12,54 @@ import ResumeManagement from './pages/ResumeManagement'
 import CoverLetter      from './pages/CoverLetter'
 import TailoredResume   from './pages/TailoredResume'
 
-/* scroll to top on route change */
+/* Scroll to top on route change */
 function ScrollReset() {
     const { pathname } = useLocation()
     useEffect(() => { window.scrollTo(0, 0) }, [pathname])
     return null
 }
 
-function App() {
+/* Protected route — token nahi hai toh login pe redirect */
+function PrivateRoute({ children }) {
     const token = localStorage.getItem('token')
+    if (!token) return <Navigate to="/login" replace />
+    return children
+}
+
+/* Public route — already logged in hai toh dashboard pe redirect */
+function PublicRoute({ children }) {
+    const token = localStorage.getItem('token')
+    if (token) return <Navigate to="/dashboard" replace />
+    return children
+}
+
+function App() {
     return (
         <BrowserRouter>
             <ScrollReset />
-            <Layout> {/* Sab kuch Layout ke andar */}
+            <Layout>
                 <Routes>
-                    <Route path="/"             element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
-                    <Route path="/login"        element={<Login />} />
-                    <Route path="/register"     element={<Register />} />
-                    <Route path="/dashboard"    element={<Dashboard />} />
-                    <Route path="/upload"       element={<Upload />} />
-                    <Route path="/analyze"      element={<Analyze />} />
-                    <Route path="/history"      element={<AnalysisHistory />} />
-                    <Route path="/resumes"      element={<ResumeManagement />} />
-                    <Route path="/cover-letter" element={<CoverLetter />} />
-                    <Route path="/tailor"       element={<TailoredResume />} />
+                    <Route path="/" element={
+                        localStorage.getItem('token')
+                            ? <Navigate to="/dashboard" replace />
+                            : <Navigate to="/login" replace />
+                    } />
+
+                    {/* Public routes */}
+                    <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
+                    <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+
+                    {/* Protected routes */}
+                    <Route path="/dashboard"    element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+                    <Route path="/upload"       element={<PrivateRoute><Upload /></PrivateRoute>} />
+                    <Route path="/analyze"      element={<PrivateRoute><Analyze /></PrivateRoute>} />
+                    <Route path="/history"      element={<PrivateRoute><AnalysisHistory /></PrivateRoute>} />
+                    <Route path="/resumes"      element={<PrivateRoute><ResumeManagement /></PrivateRoute>} />
+                    <Route path="/cover-letter" element={<PrivateRoute><CoverLetter /></PrivateRoute>} />
+                    <Route path="/tailor"       element={<PrivateRoute><TailoredResume /></PrivateRoute>} />
+
+                    {/* 404 fallback */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </Layout>
         </BrowserRouter>
