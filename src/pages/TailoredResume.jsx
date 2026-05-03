@@ -7,6 +7,15 @@ import { saveAs } from 'file-saver'
 
 const API = import.meta.env.VITE_API_URL
 
+/* ── Fresher Detection ── */
+const isFresher = (data) => {
+    const expCount = data.experience?.length || 0
+    const hasInternOnly = data.experience?.every(e =>
+        e.title?.toLowerCase().includes('intern')
+    )
+    return expCount === 0 || (expCount === 1 && hasInternOnly)
+}
+
 /* ── Live Edit Helper ── */
 const EditableText = ({ value, onSave, style }) => (
     <span
@@ -39,26 +48,27 @@ const TEMPLATES = [
 /* ════════════════════════════════════════════════
    MODERN DARK TEMPLATE
 ════════════════════════════════════════════════ */
-function ModernTemplate({ data, updateData }) {
+function ModernTemplate({ data, updateData, compact }) {
+    const fs = compact ? '11px' : '13px'
     const s = {
-        wrap:      { fontFamily: 'sans-serif', background: '#0f0f1a', color: '#e2e8f0', padding: '40px' },
-        name:      { color: '#a78bfa', fontSize: '28px', fontWeight: 800, marginBottom: '4px' },
-        title:     { color: '#7c3aed', fontSize: '14px', marginBottom: '6px' },
-        contact:   { fontSize: '12px', color: '#94a3b8', marginBottom: '6px' },
-        links:     { fontSize: '12px', color: '#64748b', marginBottom: '20px' },
+        wrap:      { fontFamily: 'sans-serif', background: '#0f0f1a', color: '#e2e8f0', padding: compact ? '24px' : '40px' },
+        name:      { color: '#a78bfa', fontSize: compact ? '22px' : '28px', fontWeight: 800, marginBottom: '4px' },
+        title:     { color: '#7c3aed', fontSize: compact ? '12px' : '14px', marginBottom: '6px' },
+        contact:   { fontSize: '11px', color: '#94a3b8', marginBottom: '6px' },
+        links:     { fontSize: '11px', color: '#64748b', marginBottom: compact ? '12px' : '20px' },
         link:      { color: '#7c3aed', textDecoration: 'none', marginRight: '14px' },
-        sectionH:  { borderBottom: '1px solid #7c3aed', color: '#a78bfa', fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', paddingBottom: '4px', marginTop: '20px', marginBottom: '10px' },
-        text:      { fontSize: '13px', lineHeight: 1.7, color: '#cbd5e1' },
-        skillWrap: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' },
-        skillTag:  { background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.4)', color: '#a78bfa', padding: '3px 10px', borderRadius: '99px', fontSize: '12px' },
-        expTitle:  { fontWeight: 700, fontSize: '14px', color: '#e2e8f0' },
-        expMeta:   { fontSize: '12px', color: '#7c3aed', marginBottom: '4px' },
-        bullet:    { fontSize: '13px', color: '#cbd5e1', marginLeft: '12px', lineHeight: 1.6 },
-        projName:  { fontWeight: 700, fontSize: '13px', color: '#a78bfa', marginBottom: '3px' },
-        projDesc:  { fontSize: '12px', color: '#94a3b8', marginBottom: '4px', lineHeight: 1.5 },
-        techTag:   { background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.25)', color: '#22d3ee', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', marginRight: '4px', marginBottom: '4px', display: 'inline-block' },
-        certItem:  { fontSize: '13px', color: '#cbd5e1', marginBottom: '4px' },
-        achItem:   { fontSize: '13px', color: '#fbbf24', marginBottom: '4px', marginLeft: '12px' },
+        sectionH:  { borderBottom: '1px solid #7c3aed', color: '#a78bfa', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', paddingBottom: '4px', marginTop: compact ? '12px' : '20px', marginBottom: compact ? '6px' : '10px' },
+        text:      { fontSize: fs, lineHeight: compact ? 1.5 : 1.7, color: '#cbd5e1' },
+        skillWrap: { display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' },
+        skillTag:  { background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.4)', color: '#a78bfa', padding: compact ? '2px 8px' : '3px 10px', borderRadius: '99px', fontSize: '11px' },
+        expTitle:  { fontWeight: 700, fontSize: compact ? '12px' : '14px', color: '#e2e8f0' },
+        expMeta:   { fontSize: '11px', color: '#7c3aed', marginBottom: '3px' },
+        bullet:    { fontSize: fs, color: '#cbd5e1', marginLeft: '12px', lineHeight: compact ? 1.5 : 1.6 },
+        projName:  { fontWeight: 700, fontSize: fs, color: '#a78bfa', marginBottom: '2px' },
+        projDesc:  { fontSize: '11px', color: '#94a3b8', marginBottom: '3px', lineHeight: 1.4 },
+        techTag:   { background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.25)', color: '#22d3ee', padding: '1px 6px', borderRadius: '4px', fontSize: '10px', marginRight: '3px', marginBottom: '3px', display: 'inline-block' },
+        certItem:  { fontSize: fs, color: '#cbd5e1', marginBottom: '3px' },
+        achItem:   { fontSize: fs, color: '#fbbf24', marginBottom: '3px', marginLeft: '12px' },
     }
     return (
         <div style={s.wrap}>
@@ -67,8 +77,8 @@ function ModernTemplate({ data, updateData }) {
             <div style={s.contact}>{data.email}{data.phone && `  |  ${data.phone}`}</div>
             {(data.linkedin || data.github) && (
                 <div style={s.links}>
-                    {data.linkedin && <a href={data.linkedin} style={s.link}>🔗 LinkedIn</a>}
-                    {data.github   && <a href={data.github}   style={s.link}>🐙 GitHub</a>}
+                    {data.linkedin && <a href={`https://${data.linkedin.replace(/^https?:\/\//,'')}`} style={s.link}>LinkedIn</a>}
+                    {data.github   && <a href={`https://${data.github.replace(/^https?:\/\//,'')}`}   style={s.link}>GitHub</a>}
                 </div>
             )}
             {data.summary && <>
@@ -76,13 +86,13 @@ function ModernTemplate({ data, updateData }) {
                 <p style={s.text}><EditableText value={data.summary} onSave={v => updateData('summary', v)} /></p>
             </>}
             {data.skills?.length > 0 && <>
-                <div style={s.sectionH}>Skills</div>
+                <div style={s.sectionH}>Technical Skills</div>
                 <div style={s.skillWrap}>{data.skills.map((sk, i) => <span key={i} style={s.skillTag}>{sk}</span>)}</div>
             </>}
             {data.experience?.length > 0 && <>
                 <div style={s.sectionH}>Experience</div>
                 {data.experience.map((exp, i) => (
-                    <div key={i} style={{ marginBottom: '14px' }}>
+                    <div key={i} style={{ marginBottom: compact ? '8px' : '14px' }}>
                         <div style={s.expTitle}>{exp.title} — {exp.company}</div>
                         <div style={s.expMeta}>{exp.duration}</div>
                         {exp.points?.map((pt, j) => <div key={j} style={s.bullet}>• {pt}</div>)}
@@ -92,7 +102,7 @@ function ModernTemplate({ data, updateData }) {
             {data.projects?.length > 0 && <>
                 <div style={s.sectionH}>Projects</div>
                 {data.projects.map((proj, i) => (
-                    <div key={i} style={{ marginBottom: '14px' }}>
+                    <div key={i} style={{ marginBottom: compact ? '8px' : '14px' }}>
                         <div style={s.projName}>{proj.name}</div>
                         <div style={s.projDesc}>{proj.description}</div>
                         <div>{proj.techStack?.map((t, j) => <span key={j} style={s.techTag}>{t}</span>)}</div>
@@ -102,9 +112,7 @@ function ModernTemplate({ data, updateData }) {
             {data.certifications?.length > 0 && <>
                 <div style={s.sectionH}>Certifications</div>
                 {data.certifications.map((c, i) => (
-                    <div key={i} style={s.certItem}>
-                        🏅 <strong>{c.name}</strong>{c.issuer ? ` — ${c.issuer}` : ''}
-                    </div>
+                    <div key={i} style={s.certItem}>• <strong>{c.name}</strong>{c.issuer ? ` — ${c.issuer}` : ''}</div>
                 ))}
             </>}
             {data.achievements?.length > 0 && <>
@@ -114,7 +122,7 @@ function ModernTemplate({ data, updateData }) {
             {data.education?.length > 0 && <>
                 <div style={s.sectionH}>Education</div>
                 {data.education.map((edu, i) => (
-                    <div key={i} style={{ marginBottom: '10px' }}>
+                    <div key={i} style={{ marginBottom: compact ? '6px' : '10px' }}>
                         <div style={s.expTitle}>{edu.degree}</div>
                         <div style={s.expMeta}>
                             {edu.college && edu.college.toLowerCase() !== 'not specified' ? edu.college : ''}
@@ -130,24 +138,25 @@ function ModernTemplate({ data, updateData }) {
 /* ════════════════════════════════════════════════
    CLASSIC PRO TEMPLATE
 ════════════════════════════════════════════════ */
-function ClassicTemplate({ data, updateData }) {
+function ClassicTemplate({ data, updateData, compact }) {
+    const fs = compact ? '12px' : '13px'
     const s = {
-        wrap:     { fontFamily: 'Georgia, serif', background: '#fff', color: '#1a1a1a', padding: '48px' },
-        header:   { textAlign: 'center', borderBottom: '2px solid #1a1a1a', paddingBottom: '16px', marginBottom: '20px' },
-        name:     { fontSize: '26px', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '4px' },
-        title:    { fontSize: '13px', color: '#555', letterSpacing: '0.08em', textTransform: 'uppercase' },
-        contact:  { fontSize: '12px', color: '#777', marginTop: '6px' },
-        sectionH: { fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', borderBottom: '1px solid #1a1a1a', paddingBottom: '3px', marginTop: '18px', marginBottom: '10px' },
-        text:     { fontSize: '13px', lineHeight: 1.7 },
-        skills:   { fontSize: '13px', lineHeight: 1.8 },
-        expTitle: { fontWeight: 700, fontSize: '14px' },
-        expMeta:  { fontSize: '12px', color: '#666', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' },
-        bullet:   { fontSize: '13px', marginLeft: '14px', lineHeight: 1.6 },
-        projName: { fontWeight: 700, fontSize: '13px', marginBottom: '2px' },
-        projDesc: { fontSize: '13px', color: '#444', marginBottom: '4px', lineHeight: 1.5 },
-        techRow:  { fontSize: '12px', color: '#666' },
-        certItem: { fontSize: '13px', marginBottom: '3px' },
-        achItem:  { fontSize: '13px', marginBottom: '3px', marginLeft: '14px' },
+        wrap:     { fontFamily: 'Georgia, serif', background: '#fff', color: '#1a1a1a', padding: compact ? '30px' : '48px' },
+        header:   { textAlign: 'center', borderBottom: '2px solid #1a1a1a', paddingBottom: '12px', marginBottom: compact ? '12px' : '20px' },
+        name:     { fontSize: compact ? '22px' : '26px', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '4px' },
+        title:    { fontSize: '12px', color: '#555', letterSpacing: '0.08em', textTransform: 'uppercase' },
+        contact:  { fontSize: '11px', color: '#777', marginTop: '4px' },
+        sectionH: { fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', borderBottom: '1px solid #1a1a1a', paddingBottom: '3px', marginTop: compact ? '10px' : '18px', marginBottom: compact ? '6px' : '10px' },
+        text:     { fontSize: fs, lineHeight: compact ? 1.5 : 1.7 },
+        skills:   { fontSize: fs, lineHeight: 1.8 },
+        expTitle: { fontWeight: 700, fontSize: compact ? '12px' : '14px' },
+        expMeta:  { fontSize: '11px', color: '#666', marginBottom: '3px', display: 'flex', justifyContent: 'space-between' },
+        bullet:   { fontSize: fs, marginLeft: '14px', lineHeight: compact ? 1.5 : 1.6 },
+        projName: { fontWeight: 700, fontSize: fs, marginBottom: '2px' },
+        projDesc: { fontSize: fs, color: '#444', marginBottom: '3px', lineHeight: 1.4 },
+        techRow:  { fontSize: '11px', color: '#666' },
+        certItem: { fontSize: fs, marginBottom: '3px' },
+        achItem:  { fontSize: fs, marginBottom: '3px', marginLeft: '14px' },
     }
     return (
         <div style={s.wrap}>
@@ -165,13 +174,13 @@ function ClassicTemplate({ data, updateData }) {
                 <p style={s.text}><EditableText value={data.summary} onSave={v => updateData('summary', v)} /></p>
             </>}
             {data.skills?.length > 0 && <>
-                <div style={s.sectionH}>Core Skills</div>
+                <div style={s.sectionH}>Technical Skills</div>
                 <div style={s.skills}>{data.skills.join(' • ')}</div>
             </>}
             {data.experience?.length > 0 && <>
                 <div style={s.sectionH}>Work Experience</div>
                 {data.experience.map((exp, i) => (
-                    <div key={i} style={{ marginBottom: '14px' }}>
+                    <div key={i} style={{ marginBottom: compact ? '8px' : '14px' }}>
                         <div style={s.expMeta}>
                             <span style={s.expTitle}>{exp.title}, {exp.company}</span>
                             <span>{exp.duration}</span>
@@ -183,7 +192,7 @@ function ClassicTemplate({ data, updateData }) {
             {data.projects?.length > 0 && <>
                 <div style={s.sectionH}>Projects</div>
                 {data.projects.map((proj, i) => (
-                    <div key={i} style={{ marginBottom: '12px' }}>
+                    <div key={i} style={{ marginBottom: compact ? '8px' : '12px' }}>
                         <div style={s.projName}>{proj.name}</div>
                         <div style={s.projDesc}>{proj.description}</div>
                         {proj.techStack?.length > 0 &&
@@ -204,13 +213,13 @@ function ClassicTemplate({ data, updateData }) {
             {data.education?.length > 0 && <>
                 <div style={s.sectionH}>Education</div>
                 {data.education.map((edu, i) => (
-                    <div key={i} style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                    <div key={i} style={{ marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
                         <div>
-                            <span style={{ fontWeight: 700, fontSize: '13px' }}>{edu.degree}</span>
+                            <span style={{ fontWeight: 700, fontSize: fs }}>{edu.degree}</span>
                             {edu.college && edu.college.toLowerCase() !== 'not specified' &&
-                                <span style={{ fontSize: '13px' }}> — {edu.college}</span>}
+                                <span style={{ fontSize: fs }}> — {edu.college}</span>}
                         </div>
-                        <span style={{ fontSize: '12px', color: '#666' }}>{edu.year}</span>
+                        <span style={{ fontSize: '11px', color: '#666' }}>{edu.year}</span>
                     </div>
                 ))}
             </>}
@@ -221,26 +230,27 @@ function ClassicTemplate({ data, updateData }) {
 /* ════════════════════════════════════════════════
    EXECUTIVE TEMPLATE
 ════════════════════════════════════════════════ */
-function ExecutiveTemplate({ data, updateData }) {
+function ExecutiveTemplate({ data, updateData, compact }) {
+    const fs = compact ? '12px' : '13px'
     const s = {
         wrap:     { fontFamily: 'Helvetica, Arial, sans-serif', background: '#fff', color: '#1a1a1a' },
-        header:   { background: '#1e3a5f', color: '#fff', padding: '36px 48px' },
-        name:     { fontSize: '28px', fontWeight: 700, letterSpacing: '0.02em', marginBottom: '4px' },
-        title:    { fontSize: '13px', color: '#93c5fd', letterSpacing: '0.08em' },
-        contact:  { fontSize: '12px', color: '#bfdbfe', marginTop: '6px' },
-        body:     { padding: '32px 48px' },
-        sectionH: { fontSize: '12px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#1e3a5f', borderLeft: '4px solid #1e3a5f', paddingLeft: '10px', marginTop: '20px', marginBottom: '10px' },
-        text:     { fontSize: '13px', lineHeight: 1.7, color: '#374151' },
-        skills:   { display: 'flex', flexWrap: 'wrap', gap: '6px' },
-        skillTag: { background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', padding: '3px 12px', borderRadius: '4px', fontSize: '12px' },
-        expTitle: { fontWeight: 700, fontSize: '14px', color: '#1a1a1a' },
-        expMeta:  { fontSize: '12px', color: '#1e3a5f', fontWeight: 600, marginBottom: '4px' },
-        bullet:   { fontSize: '13px', color: '#374151', marginLeft: '14px', lineHeight: 1.6 },
-        projName: { fontWeight: 700, fontSize: '13px', color: '#1e3a5f', marginBottom: '3px' },
-        projDesc: { fontSize: '13px', color: '#374151', marginBottom: '4px', lineHeight: 1.5 },
-        techTag:  { background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', marginRight: '4px', marginBottom: '4px', display: 'inline-block' },
-        certItem: { fontSize: '13px', color: '#374151', marginBottom: '4px' },
-        achItem:  { fontSize: '13px', color: '#374151', marginBottom: '4px', marginLeft: '14px' },
+        header:   { background: '#1e3a5f', color: '#fff', padding: compact ? '20px 36px' : '36px 48px' },
+        name:     { fontSize: compact ? '22px' : '28px', fontWeight: 700, letterSpacing: '0.02em', marginBottom: '4px' },
+        title:    { fontSize: '12px', color: '#93c5fd', letterSpacing: '0.08em' },
+        contact:  { fontSize: '11px', color: '#bfdbfe', marginTop: '4px' },
+        body:     { padding: compact ? '20px 36px' : '32px 48px' },
+        sectionH: { fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#1e3a5f', borderLeft: '4px solid #1e3a5f', paddingLeft: '10px', marginTop: compact ? '12px' : '20px', marginBottom: compact ? '6px' : '10px' },
+        text:     { fontSize: fs, lineHeight: compact ? 1.5 : 1.7, color: '#374151' },
+        skills:   { display: 'flex', flexWrap: 'wrap', gap: '4px' },
+        skillTag: { background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', padding: compact ? '2px 8px' : '3px 12px', borderRadius: '4px', fontSize: '11px' },
+        expTitle: { fontWeight: 700, fontSize: compact ? '12px' : '14px', color: '#1a1a1a' },
+        expMeta:  { fontSize: '11px', color: '#1e3a5f', fontWeight: 600, marginBottom: '3px' },
+        bullet:   { fontSize: fs, color: '#374151', marginLeft: '14px', lineHeight: compact ? 1.5 : 1.6 },
+        projName: { fontWeight: 700, fontSize: fs, color: '#1e3a5f', marginBottom: '2px' },
+        projDesc: { fontSize: fs, color: '#374151', marginBottom: '3px', lineHeight: 1.4 },
+        techTag:  { background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '1px 6px', borderRadius: '4px', fontSize: '10px', marginRight: '3px', marginBottom: '3px', display: 'inline-block' },
+        certItem: { fontSize: fs, color: '#374151', marginBottom: '3px' },
+        achItem:  { fontSize: fs, color: '#374151', marginBottom: '3px', marginLeft: '14px' },
     }
     return (
         <div style={s.wrap}>
@@ -255,17 +265,17 @@ function ExecutiveTemplate({ data, updateData }) {
             </div>
             <div style={s.body}>
                 {data.summary && <>
-                    <div style={s.sectionH}>Executive Summary</div>
+                    <div style={s.sectionH}>Professional Summary</div>
                     <p style={s.text}><EditableText value={data.summary} onSave={v => updateData('summary', v)} /></p>
                 </>}
                 {data.skills?.length > 0 && <>
-                    <div style={s.sectionH}>Key Competencies</div>
+                    <div style={s.sectionH}>Technical Competencies</div>
                     <div style={s.skills}>{data.skills.map((sk, i) => <span key={i} style={s.skillTag}>{sk}</span>)}</div>
                 </>}
                 {data.experience?.length > 0 && <>
                     <div style={s.sectionH}>Professional Experience</div>
                     {data.experience.map((exp, i) => (
-                        <div key={i} style={{ marginBottom: '16px' }}>
+                        <div key={i} style={{ marginBottom: compact ? '8px' : '16px' }}>
                             <div style={s.expTitle}>{exp.title}</div>
                             <div style={s.expMeta}>{exp.company} | {exp.duration}</div>
                             {exp.points?.map((pt, j) => <div key={j} style={s.bullet}>▸ {pt}</div>)}
@@ -275,7 +285,7 @@ function ExecutiveTemplate({ data, updateData }) {
                 {data.projects?.length > 0 && <>
                     <div style={s.sectionH}>Key Projects</div>
                     {data.projects.map((proj, i) => (
-                        <div key={i} style={{ marginBottom: '14px' }}>
+                        <div key={i} style={{ marginBottom: compact ? '8px' : '14px' }}>
                             <div style={s.projName}>{proj.name}</div>
                             <div style={s.projDesc}>{proj.description}</div>
                             <div>{proj.techStack?.map((t, j) => <span key={j} style={s.techTag}>{t}</span>)}</div>
@@ -295,11 +305,11 @@ function ExecutiveTemplate({ data, updateData }) {
                 {data.education?.length > 0 && <>
                     <div style={s.sectionH}>Education</div>
                     {data.education.map((edu, i) => (
-                        <div key={i} style={{ marginBottom: '8px' }}>
-                            <span style={{ fontWeight: 700, fontSize: '13px' }}>{edu.degree}</span>
+                        <div key={i} style={{ marginBottom: '6px' }}>
+                            <span style={{ fontWeight: 700, fontSize: fs }}>{edu.degree}</span>
                             {edu.college && edu.college.toLowerCase() !== 'not specified' &&
-                                <span style={{ fontSize: '13px', color: '#374151' }}> — {edu.college}</span>}
-                            {edu.year && <span style={{ fontSize: '13px', color: '#374151' }}>, {edu.year}</span>}
+                                <span style={{ fontSize: fs, color: '#374151' }}> — {edu.college}</span>}
+                            {edu.year && <span style={{ fontSize: fs, color: '#374151' }}>, {edu.year}</span>}
                         </div>
                     ))}
                 </>}
@@ -311,21 +321,22 @@ function ExecutiveTemplate({ data, updateData }) {
 /* ════════════════════════════════════════════════
    CREATIVE TEMPLATE (2-column)
 ════════════════════════════════════════════════ */
-function CreativeTemplate({ data, updateData }) {
-    const sidebar = { background: '#2d1b69', color: '#e9d5ff', padding: '32px 20px', width: '200px', flexShrink: 0 }
-    const main    = { padding: '32px', flex: 1 }
-    const sideH   = { fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#a78bfa', borderBottom: '1px solid rgba(167,139,250,0.3)', paddingBottom: '4px', marginTop: '20px', marginBottom: '8px' }
-    const mainH   = { fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7c3aed', borderBottom: '2px solid #7c3aed', paddingBottom: '3px', marginTop: '20px', marginBottom: '10px' }
+function CreativeTemplate({ data, updateData, compact }) {
+    const sidebar = { background: '#2d1b69', color: '#e9d5ff', padding: compact ? '20px 16px' : '32px 20px', width: compact ? '170px' : '200px', flexShrink: 0 }
+    const main    = { padding: compact ? '20px' : '32px', flex: 1 }
+    const sideH   = { fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#a78bfa', borderBottom: '1px solid rgba(167,139,250,0.3)', paddingBottom: '4px', marginTop: compact ? '12px' : '20px', marginBottom: '6px' }
+    const mainH   = { fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7c3aed', borderBottom: '2px solid #7c3aed', paddingBottom: '3px', marginTop: compact ? '12px' : '20px', marginBottom: compact ? '6px' : '10px' }
+    const fs      = compact ? '11px' : '13px'
     return (
         <div style={{ fontFamily: 'sans-serif', background: '#fff', display: 'flex' }}>
             <div style={sidebar}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'linear-gradient(135deg,#a78bfa,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 800, color: '#fff', marginBottom: '12px' }}>
+                <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'linear-gradient(135deg,#a78bfa,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 800, color: '#fff', marginBottom: '10px' }}>
                     {data.name?.charAt(0) || 'R'}
                 </div>
-                <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px' }}><EditableText value={data.name} onSave={v => updateData('name', v)} /></div>
-                <div style={{ fontSize: '11px', color: '#c4b5fd', marginBottom: '12px' }}><EditableText value={data.jobTitle} onSave={v => updateData('jobTitle', v)} /></div>
+                <div style={{ fontSize: compact ? '13px' : '15px', fontWeight: 700, marginBottom: '4px' }}><EditableText value={data.name} onSave={v => updateData('name', v)} /></div>
+                <div style={{ fontSize: '10px', color: '#c4b5fd', marginBottom: '10px' }}><EditableText value={data.jobTitle} onSave={v => updateData('jobTitle', v)} /></div>
                 <div style={sideH}>Contact</div>
-                <div style={{ fontSize: '11px', lineHeight: 1.8, wordBreak: 'break-all' }}>
+                <div style={{ fontSize: '10px', lineHeight: 1.7, wordBreak: 'break-all' }}>
                     {data.email}<br />{data.phone}
                     {data.linkedin && <><br /><span style={{ color: '#c4b5fd' }}>{data.linkedin}</span></>}
                     {data.github   && <><br /><span style={{ color: '#c4b5fd' }}>{data.github}</span></>}
@@ -333,19 +344,19 @@ function CreativeTemplate({ data, updateData }) {
                 {data.skills?.length > 0 && <>
                     <div style={sideH}>Skills</div>
                     {data.skills.map((sk, i) => (
-                        <div key={i} style={{ fontSize: '11px', padding: '3px 0', borderBottom: '1px solid rgba(167,139,250,0.15)' }}>{sk}</div>
+                        <div key={i} style={{ fontSize: '10px', padding: '2px 0', borderBottom: '1px solid rgba(167,139,250,0.15)' }}>{sk}</div>
                     ))}
                 </>}
                 {data.certifications?.length > 0 && <>
                     <div style={sideH}>Certifications</div>
                     {data.certifications.map((c, i) => (
-                        <div key={i} style={{ fontSize: '11px', marginBottom: '6px', color: '#ddd6fe' }}>🏅 {c.name}</div>
+                        <div key={i} style={{ fontSize: '10px', marginBottom: '4px', color: '#ddd6fe' }}>• {c.name}</div>
                     ))}
                 </>}
                 {data.education?.length > 0 && <>
                     <div style={sideH}>Education</div>
                     {data.education.map((edu, i) => (
-                        <div key={i} style={{ marginBottom: '10px', fontSize: '11px' }}>
+                        <div key={i} style={{ marginBottom: '8px', fontSize: '10px' }}>
                             <div style={{ fontWeight: 700, color: '#ddd6fe' }}>{edu.degree}</div>
                             {edu.college && edu.college.toLowerCase() !== 'not specified' &&
                                 <div style={{ color: '#c4b5fd' }}>{edu.college}</div>}
@@ -357,28 +368,28 @@ function CreativeTemplate({ data, updateData }) {
             <div style={main}>
                 {data.summary && <>
                     <div style={mainH}>About Me</div>
-                    <p style={{ fontSize: '13px', lineHeight: 1.7, color: '#374151' }}>
+                    <p style={{ fontSize: fs, lineHeight: compact ? 1.5 : 1.7, color: '#374151' }}>
                         <EditableText value={data.summary} onSave={v => updateData('summary', v)} />
                     </p>
                 </>}
                 {data.experience?.length > 0 && <>
                     <div style={mainH}>Experience</div>
                     {data.experience.map((exp, i) => (
-                        <div key={i} style={{ marginBottom: '16px' }}>
-                            <div style={{ fontWeight: 700, fontSize: '14px', color: '#1a1a1a' }}>{exp.title}</div>
-                            <div style={{ fontSize: '12px', color: '#7c3aed', fontWeight: 600, marginBottom: '4px' }}>{exp.company} · {exp.duration}</div>
-                            {exp.points?.map((pt, j) => <div key={j} style={{ fontSize: '13px', color: '#374151', marginLeft: '12px', lineHeight: 1.6 }}>• {pt}</div>)}
+                        <div key={i} style={{ marginBottom: compact ? '8px' : '16px' }}>
+                            <div style={{ fontWeight: 700, fontSize: compact ? '12px' : '14px', color: '#1a1a1a' }}>{exp.title}</div>
+                            <div style={{ fontSize: '11px', color: '#7c3aed', fontWeight: 600, marginBottom: '3px' }}>{exp.company} · {exp.duration}</div>
+                            {exp.points?.map((pt, j) => <div key={j} style={{ fontSize: fs, color: '#374151', marginLeft: '12px', lineHeight: compact ? 1.5 : 1.6 }}>• {pt}</div>)}
                         </div>
                     ))}
                 </>}
                 {data.projects?.length > 0 && <>
                     <div style={mainH}>Projects</div>
                     {data.projects.map((proj, i) => (
-                        <div key={i} style={{ marginBottom: '14px' }}>
-                            <div style={{ fontWeight: 700, fontSize: '13px', color: '#1a1a1a' }}>{proj.name}</div>
-                            <div style={{ fontSize: '12px', color: '#374151', marginBottom: '4px', lineHeight: 1.5 }}>{proj.description}</div>
+                        <div key={i} style={{ marginBottom: compact ? '8px' : '14px' }}>
+                            <div style={{ fontWeight: 700, fontSize: fs, color: '#1a1a1a' }}>{proj.name}</div>
+                            <div style={{ fontSize: '11px', color: '#374151', marginBottom: '3px', lineHeight: 1.4 }}>{proj.description}</div>
                             <div>{proj.techStack?.map((t, j) => (
-                                <span key={j} style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)', padding: '2px 7px', borderRadius: '4px', fontSize: '11px', marginRight: '4px', marginBottom: '4px', display: 'inline-block' }}>{t}</span>
+                                <span key={j} style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)', padding: '1px 6px', borderRadius: '4px', fontSize: '10px', marginRight: '3px', marginBottom: '3px', display: 'inline-block' }}>{t}</span>
                             ))}</div>
                         </div>
                     ))}
@@ -386,7 +397,7 @@ function CreativeTemplate({ data, updateData }) {
                 {data.achievements?.length > 0 && <>
                     <div style={mainH}>Achievements</div>
                     {data.achievements.map((a, i) => (
-                        <div key={i} style={{ fontSize: '13px', color: '#374151', marginLeft: '12px', marginBottom: '4px' }}>★ {a}</div>
+                        <div key={i} style={{ fontSize: fs, color: '#374151', marginLeft: '12px', marginBottom: '3px' }}>★ {a}</div>
                     ))}
                 </>}
             </div>
@@ -397,25 +408,26 @@ function CreativeTemplate({ data, updateData }) {
 /* ════════════════════════════════════════════════
    MINIMAL TEMPLATE
 ════════════════════════════════════════════════ */
-function MinimalTemplate({ data, updateData }) {
+function MinimalTemplate({ data, updateData, compact }) {
+    const fs = compact ? '12px' : '13px'
     const s = {
-        wrap:     { fontFamily: "'Helvetica Neue', Arial, sans-serif", background: '#fafafa', color: '#111', padding: '48px' },
-        name:     { fontSize: '30px', fontWeight: 300, letterSpacing: '-0.02em', marginBottom: '2px' },
-        title:    { fontSize: '13px', color: '#888', marginBottom: '6px' },
-        contact:  { fontSize: '12px', color: '#aaa', marginBottom: '4px' },
-        links:    { fontSize: '12px', color: '#aaa', marginBottom: '28px' },
-        sectionH: { fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#999', marginTop: '24px', marginBottom: '10px' },
-        divider:  { height: '1px', background: '#e5e5e5', marginBottom: '12px' },
-        text:     { fontSize: '13px', lineHeight: 1.8, color: '#333' },
-        skills:   { fontSize: '13px', color: '#333', lineHeight: 2 },
-        expTitle: { fontWeight: 600, fontSize: '14px' },
-        expMeta:  { fontSize: '12px', color: '#999', marginBottom: '4px' },
-        bullet:   { fontSize: '13px', color: '#444', marginLeft: '12px', lineHeight: 1.7 },
-        projName: { fontWeight: 600, fontSize: '13px', marginBottom: '2px' },
-        projDesc: { fontSize: '13px', color: '#555', marginBottom: '4px', lineHeight: 1.5 },
-        techRow:  { fontSize: '12px', color: '#888' },
-        certItem: { fontSize: '13px', color: '#444', marginBottom: '3px' },
-        achItem:  { fontSize: '13px', color: '#444', marginBottom: '3px', marginLeft: '12px' },
+        wrap:     { fontFamily: "'Helvetica Neue', Arial, sans-serif", background: '#fafafa', color: '#111', padding: compact ? '30px' : '48px' },
+        name:     { fontSize: compact ? '24px' : '30px', fontWeight: 300, letterSpacing: '-0.02em', marginBottom: '2px' },
+        title:    { fontSize: '12px', color: '#888', marginBottom: '4px' },
+        contact:  { fontSize: '11px', color: '#aaa', marginBottom: '3px' },
+        links:    { fontSize: '11px', color: '#aaa', marginBottom: compact ? '16px' : '28px' },
+        sectionH: { fontSize: '10px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#999', marginTop: compact ? '14px' : '24px', marginBottom: compact ? '6px' : '10px' },
+        divider:  { height: '1px', background: '#e5e5e5', marginBottom: '8px' },
+        text:     { fontSize: fs, lineHeight: compact ? 1.5 : 1.8, color: '#333' },
+        skills:   { fontSize: fs, color: '#333', lineHeight: 1.8 },
+        expTitle: { fontWeight: 600, fontSize: compact ? '12px' : '14px' },
+        expMeta:  { fontSize: '11px', color: '#999', marginBottom: '3px' },
+        bullet:   { fontSize: fs, color: '#444', marginLeft: '12px', lineHeight: compact ? 1.5 : 1.7 },
+        projName: { fontWeight: 600, fontSize: fs, marginBottom: '2px' },
+        projDesc: { fontSize: fs, color: '#555', marginBottom: '3px', lineHeight: 1.4 },
+        techRow:  { fontSize: '11px', color: '#888' },
+        certItem: { fontSize: fs, color: '#444', marginBottom: '2px' },
+        achItem:  { fontSize: fs, color: '#444', marginBottom: '2px', marginLeft: '12px' },
     }
     return (
         <div style={s.wrap}>
@@ -443,7 +455,7 @@ function MinimalTemplate({ data, updateData }) {
                 <div style={s.sectionH}>Experience</div>
                 <div style={s.divider} />
                 {data.experience.map((exp, i) => (
-                    <div key={i} style={{ marginBottom: '16px' }}>
+                    <div key={i} style={{ marginBottom: compact ? '8px' : '16px' }}>
                         <div style={s.expTitle}>{exp.title} <span style={{ fontWeight: 400, color: '#888' }}>@ {exp.company}</span></div>
                         <div style={s.expMeta}>{exp.duration}</div>
                         {exp.points?.map((pt, j) => <div key={j} style={s.bullet}>— {pt}</div>)}
@@ -454,7 +466,7 @@ function MinimalTemplate({ data, updateData }) {
                 <div style={s.sectionH}>Projects</div>
                 <div style={s.divider} />
                 {data.projects.map((proj, i) => (
-                    <div key={i} style={{ marginBottom: '14px' }}>
+                    <div key={i} style={{ marginBottom: compact ? '8px' : '14px' }}>
                         <div style={s.projName}>{proj.name}</div>
                         <div style={s.projDesc}>{proj.description}</div>
                         {proj.techStack?.length > 0 &&
@@ -478,11 +490,11 @@ function MinimalTemplate({ data, updateData }) {
                 <div style={s.sectionH}>Education</div>
                 <div style={s.divider} />
                 {data.education.map((edu, i) => (
-                    <div key={i} style={{ marginBottom: '8px' }}>
-                        <span style={{ fontWeight: 600, fontSize: '13px' }}>{edu.degree}</span>
+                    <div key={i} style={{ marginBottom: '6px' }}>
+                        <span style={{ fontWeight: 600, fontSize: fs }}>{edu.degree}</span>
                         {edu.college && edu.college.toLowerCase() !== 'not specified' &&
-                            <span style={{ fontSize: '13px', color: '#888' }}> · {edu.college}</span>}
-                        {edu.year && <span style={{ fontSize: '13px', color: '#888' }}> · {edu.year}</span>}
+                            <span style={{ fontSize: fs, color: '#888' }}> · {edu.college}</span>}
+                        {edu.year && <span style={{ fontSize: fs, color: '#888' }}> · {edu.year}</span>}
                     </div>
                 ))}
             </>}
@@ -494,18 +506,19 @@ function MinimalTemplate({ data, updateData }) {
    MAIN PAGE
 ════════════════════════════════════════════════ */
 export default function TailoredResume() {
-    const toast = useToast()  // ← ADDED
-    const [resumes, setResumes]       = useState([])
-    const [resumeId, setResumeId]     = useState('')
-    const [jobDesc, setJobDesc]       = useState('')
-    const [loading, setLoading]       = useState(false)
-    const [resumeData, setResumeData] = useState(null)
-    const [template, setTemplate]     = useState('modern')
-    const [stage, setStage]           = useState(0)
+    const toast = useToast()
+    const [resumes, setResumes]           = useState([])
+    const [resumeId, setResumeId]         = useState('')
+    const [jobDesc, setJobDesc]           = useState('')
+    const [companyType, setCompanyType]   = useState('both')
+    const [loading, setLoading]           = useState(false)
+    const [resumeData, setResumeData]     = useState(null)
+    const [template, setTemplate]         = useState('modern')
+    const [stage, setStage]               = useState(0)
     const navigate  = useNavigate()
     const token     = localStorage.getItem('token')
     const printRef  = useRef(null)
-    const stages    = ['Reading resume...', 'Matching JD...', 'Tailoring content...', 'Optimizing ATS...']
+    const stages    = ['Reading resume...', 'Matching JD keywords...', 'Tailoring content...', 'Optimizing ATS score...']
 
     useEffect(() => {
         if (!token) { navigate('/login'); return }
@@ -522,12 +535,13 @@ export default function TailoredResume() {
     const updateResumeData = (key, value) => setResumeData(prev => ({ ...prev, [key]: value }))
 
     const generate = async () => {
-        if (!resumeId || !jobDesc) { toast.warning('Select resume and paste JD'); return }  // ← CHANGED
+        if (!resumeId || !jobDesc) { toast.warning('Select a resume and paste the JD first'); return }
+        if (jobDesc.trim().length < 50) { toast.warning('JD seems too short — paste the full job description'); return }
         setLoading(true); setResumeData(null)
         try {
             const res = await axios.post(
                 `${API}/api/resume/tailor`,
-                { resumeId, jobDescription: jobDesc },
+                { resumeId, jobDescription: jobDesc, companyType },
                 { headers: { Authorization: `Bearer ${token}` } }
             )
             const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data
@@ -538,7 +552,10 @@ export default function TailoredResume() {
             if (!Array.isArray(parsed.certifications))  parsed.certifications = []
             if (!Array.isArray(parsed.achievements))    parsed.achievements = []
             setResumeData(parsed)
-        } catch (e) { toast.error('Generation failed. Please try again.') }  // ← CHANGED
+            toast.success('Resume tailored successfully!')
+        } catch (e) {
+            toast.error('Generation failed. Please try again.')
+        }
         setLoading(false)
     }
 
@@ -549,18 +566,42 @@ export default function TailoredResume() {
             await axios.post(`${API}/api/resume/save-tailored`, {
                 resumeId, jobTitle: resumeData.jobTitle, tailoredData: resumeData
             }, { headers: { Authorization: `Bearer ${token}` } })
-            toast.success('Resume saved successfully!')  // ← CHANGED
+            toast.success('Resume saved successfully!')
             navigate('/resumes')
-        } catch { toast.error('Failed to save resume') }  // ← CHANGED
+        } catch { toast.error('Failed to save resume') }
         setLoading(false)
     }
 
+    // ── Smart PDF Download ──
     const downloadPDF = () => {
+        if (!resumeData) return
+        const fresher = isFresher(resumeData)
         const el = printRef.current
         const w  = window.open('', '_blank')
-        w.document.write(`<html><head><title>Resume</title><style>body{margin:0}*{box-sizing:border-box}a{color:inherit}</style></head><body>${el.innerHTML}</body></html>`)
-        w.document.close(); w.focus()
-        setTimeout(() => { w.print(); w.close() }, 500)
+
+        const pageStyle = fresher
+            ? `@page { size: A4; margin: 10mm; } body { margin: 0; zoom: ${template === 'creative' ? '0.82' : '0.88'}; }`
+            : `@page { size: A4; margin: 12mm; } body { margin: 0; zoom: 0.95; }`
+
+        w.document.write(`
+            <html>
+            <head>
+                <title>${resumeData.name || 'Resume'}</title>
+                <style>
+                    ${pageStyle}
+                    * { box-sizing: border-box; }
+                    a { color: inherit; }
+                    @media print {
+                        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    }
+                </style>
+            </head>
+            <body>${el.innerHTML}</body>
+            </html>
+        `)
+        w.document.close()
+        w.focus()
+        setTimeout(() => { w.print(); w.close() }, 600)
     }
 
     const downloadDOCX = async () => {
@@ -575,7 +616,7 @@ export default function TailoredResume() {
             new Paragraph({ text: 'SUMMARY', heading: HeadingLevel.HEADING_3 }),
             new Paragraph({ text: resumeData.summary || '' }),
             new Paragraph({ text: '' }),
-            new Paragraph({ text: 'SKILLS', heading: HeadingLevel.HEADING_3 }),
+            new Paragraph({ text: 'TECHNICAL SKILLS', heading: HeadingLevel.HEADING_3 }),
             new Paragraph({ text: (resumeData.skills || []).join(', ') }),
             new Paragraph({ text: '' }),
             new Paragraph({ text: 'EXPERIENCE', heading: HeadingLevel.HEADING_3 }),
@@ -612,7 +653,7 @@ export default function TailoredResume() {
         ]
         const doc  = new Document({ sections: [{ children }] })
         const blob = await Packer.toBlob(doc)
-        saveAs(blob, `${resumeData.name}_Tailored.docx`)
+        saveAs(blob, `${resumeData.name}_Tailored_${companyType}.docx`)
     }
 
     const TemplateComponent = {
@@ -623,12 +664,31 @@ export default function TailoredResume() {
         minimal:   MinimalTemplate,
     }[template]
 
+    const compact = resumeData ? isFresher(resumeData) : false
+
+    // Company type button styles
+    const ctBtn = (val) => ({
+        padding: '8px 18px',
+        fontSize: '13px',
+        cursor: 'pointer',
+        borderRadius: '8px',
+        border: companyType === val ? 'none' : '1px solid #333',
+        background: companyType === val
+            ? val === 'product' ? 'linear-gradient(135deg,#7c3aed,#4f46e5)'
+                : val === 'service' ? 'linear-gradient(135deg,#0f766e,#0284c7)'
+                    : 'linear-gradient(135deg,#92400e,#b45309)'
+            : 'rgba(255,255,255,0.04)',
+        color: companyType === val ? '#fff' : '#888',
+        fontWeight: companyType === val ? 600 : 400,
+        transition: 'all 0.2s',
+    })
+
     return (
         <div style={{ padding: '40px', background: '#080812', minHeight: '100vh', color: '#fff' }}>
             <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
                 <header style={{ marginBottom: '30px' }}>
                     <h1 className="logo-text">Resume Tailor</h1>
-                    <p style={{ color: 'var(--text-3)' }}>AI-powered customization for every job</p>
+                    <p style={{ color: 'var(--text-3)' }}>AI-powered ATS optimization for every job</p>
                 </header>
 
                 {/* Step 1: Template Picker */}
@@ -650,9 +710,28 @@ export default function TailoredResume() {
                     </div>
                 </div>
 
-                {/* Step 2: Form */}
+                {/* Step 2: Company Type */}
+                <div style={{ marginBottom: '24px' }}>
+                    <div className="section-label" style={{ marginBottom: '10px' }}>2. Target Company Type</div>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <button style={ctBtn('product')} onClick={() => setCompanyType('product')}>
+                            Product-based
+                            <span style={{ fontSize: '10px', display: 'block', opacity: 0.8 }}>FAANG, Startups</span>
+                        </button>
+                        <button style={ctBtn('service')} onClick={() => setCompanyType('service')}>
+                            Service-based
+                            <span style={{ fontSize: '10px', display: 'block', opacity: 0.8 }}>TCS, Infosys, Wipro</span>
+                        </button>
+                        <button style={ctBtn('both')} onClick={() => setCompanyType('both')}>
+                            Both
+                            <span style={{ fontSize: '10px', display: 'block', opacity: 0.8 }}>Balanced approach</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Step 3: Form */}
                 <div className="glass" style={{ padding: '30px', marginBottom: '40px' }}>
-                    <div className="section-label" style={{ marginBottom: '16px' }}>2. Job Details</div>
+                    <div className="section-label" style={{ marginBottom: '16px' }}>3. Job Details</div>
                     <select value={resumeId} onChange={e => setResumeId(e.target.value)} className="input-field" style={{ marginBottom: '15px' }}>
                         <option value="">— Select Base Resume —</option>
                         {resumes.map(r => <option key={r.id} value={r.id}>{r.fileName} (v{r.versionNumber})</option>)}
@@ -661,34 +740,44 @@ export default function TailoredResume() {
                         value={jobDesc}
                         onChange={e => setJobDesc(e.target.value)}
                         className="input-field"
-                        placeholder="Paste Job Description here..."
-                        rows={5}
+                        placeholder="Paste full Job Description here — include responsibilities, required skills, preferred skills..."
+                        rows={6}
                         style={{ resize: 'vertical' }}
                     />
-                    <button className="btn-primary" onClick={generate} disabled={loading} style={{ width: '100%', marginTop: '20px', justifyContent: 'center', padding: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
+                            {jobDesc.trim().split(/\s+/).filter(Boolean).length} words · Targeting: <span style={{ color: companyType === 'product' ? '#a78bfa' : companyType === 'service' ? '#22d3ee' : '#f59e0b' }}>{companyType}</span>
+                        </span>
+                        {jobDesc.length > 0 && jobDesc.length < 100 && (
+                            <span style={{ fontSize: '11px', color: 'var(--red)' }}>JD too short — paste full description</span>
+                        )}
+                    </div>
+                    <button className="btn-primary" onClick={generate} disabled={loading} style={{ width: '100%', marginTop: '16px', justifyContent: 'center', padding: '14px' }}>
                         {loading
                             ? <><span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} /> {stages[stage]}</>
-                            : <><span>✦</span> Generate Tailored Resume</>
+                            : <><span>✦</span> Generate ATS-Optimized Resume</>
                         }
                     </button>
                 </div>
 
-                {/* Step 3: Preview + Download */}
+                {/* Step 4: Preview + Download */}
                 {resumeData && (
                     <div className="page-enter">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
                             <div style={{ color: 'var(--green)', fontSize: '13px', fontFamily: 'var(--font-mono)' }}>
                                 ✓ Click any text to edit inline
+                                {compact && <span style={{ marginLeft: '12px', color: '#f59e0b' }}>📄 1-page mode (fresher)</span>}
+                                <span style={{ marginLeft: '12px', color: '#94a3b8' }}>Optimized for: {companyType}</span>
                             </div>
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <button onClick={downloadPDF}    className="btn-ghost"   style={{ fontSize: '13px' }}>↓ PDF</button>
                                 <button onClick={downloadDOCX}   className="btn-ghost"   style={{ fontSize: '13px' }}>↓ DOCX</button>
-                                <button onClick={saveToDatabase} className="btn-primary" style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', fontSize: '13px' }}>💾 Save to Database</button>
+                                <button onClick={saveToDatabase} className="btn-primary" style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', fontSize: '13px' }}>💾 Save</button>
                             </div>
                         </div>
                         <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
                             <div ref={printRef}>
-                                <TemplateComponent data={resumeData} updateData={updateResumeData} />
+                                <TemplateComponent data={resumeData} updateData={updateResumeData} compact={compact} />
                             </div>
                         </div>
                     </div>
