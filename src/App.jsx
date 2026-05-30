@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 
 import Layout           from './pages/Layout'
 import Login            from './pages/Login'
@@ -62,6 +63,7 @@ function App() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </Layout>
+            <Analytics />
         </BrowserRouter>
     )
 }
